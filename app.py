@@ -4,14 +4,15 @@ import requests
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Needed for flash messages
+app.secret_key = 'your_secret_key'
 
-# Keep track of uploaded badges in memory
+# In-memory tracking
 uploaded_badges = []
+deleted_badges = []
 
 @app.route('/')
 def index():
-    return render_template('index.html', badges=uploaded_badges)
+    return render_template('index.html', badges=uploaded_badges, deleted=deleted_badges)
 
 @app.route('/upload', methods=['POST'])
 def upload_badges():
@@ -22,13 +23,13 @@ def upload_badges():
 
     try:
         df = pd.read_csv(file)
-        if 'userId' not in df.columns or 'badgeId' not in df.columns or 'badgeInstanceId' not in df.columns or 'comment' not in df.columns:
+        required_columns = {'userId', 'badgeId', 'badgeInstanceId', 'comment'}
+        if not required_columns.issubset(df.columns):
             flash("CSV must contain userId, badgeId, badgeInstanceId, and comment columns.", "error")
             return redirect(url_for('index'))
 
         total_uploaded = 0
         global uploaded_badges
-
         for _, row in df.iterrows():
             payload = {
                 "userId": row['userId'],
@@ -43,13 +44,7 @@ def upload_badges():
             )
             if response.status_code == 201:
                 total_uploaded += 1
-                # Add to in-memory list
-                uploaded_badges.append({
-                    "userId": row['userId'],
-                    "badgeId": int(row['badgeId']),
-                    "badgeInstanceId": int(row['badgeInstanceId']),
-                    "comment": row['comment']
-                })
+                uploaded_badges.append(payload)
 
         flash(f"Success! {total_uploaded} badges uploaded.", "success")
         return redirect(url_for('index'))
@@ -57,6 +52,7 @@ def upload_badges():
     except Exception as e:
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('index'))
+
 @app.route('/delete-user-badges', methods=['POST'])
 def delete_user_badges():
     user_id = request.form.get('userId')
@@ -64,40 +60,35 @@ def delete_user_badges():
         flash("User ID is required to delete badges.", "error")
         return redirect(url_for('index'))
 
-    list_url = f"{os.environ['SF_BASE_URL']}/odata/v2/UserBadges?$filter=userId eq '{user_id}'&$format=json"
-    response = requests.get(list_url, auth=(os.environ['SF_USERNAME'], os.environ['SF_PASSWORD']))
+    try:
+        list_url = f"{os.environ['SF_BASE_URL']}/odata/v2/UserBadges?$filter=userId eq '{user_id}'&$format=json"
+        response = requests.get(list_url, auth=(os.environ['SF_USERNAME'], os.environ['SF_PASSWORD']))
+        if response.status_code != 200:
+            flash(f"Failed to fetch badges: {response.text}", "error")
+            return redirect(url_for('index'))
 
-    deleted_badges = []
-
-    if response.status_code == 200:
         badges = response.json().get('d', {}).get('results', [])
+        global deleted_badges
+        deleted_count = 0
+
         for badge in badges:
-            badge_id = badge.get('badgeInstanceId')
-            delete_url = f"{os.environ['SF_BASE_URL']}/odata/v2/UserBadges(badgeInstanceId={badge_id},userId='{user_id}')?$format=json"
-            delete_response = requests.delete(
-                delete_url,
-                auth=(os.environ['SF_USERNAME'], os.environ['SF_PASSWORD'])
-            )
+            badge_id = badge.get('badgeId')
+            badge_instance_id = badge.get('badgeInstanceId')
 
-            print(f"DELETE URL: {delete_url} — Status: {delete_response.status_code}")
-
-            if delete_response.status_code in [200, 204]:
+            delete_url = f"{os.environ['SF_BASE_URL']}/odata/v2/UserBadges(badgeInstanceId={badge_instance_id},userId='{user_id}')?$format=json"
+            del_response = requests.delete(delete_url, auth=(os.environ['SF_USERNAME'], os.environ['SF_PASSWORD']))
+            if del_response.status_code in [200, 204]:
+                deleted_count += 1
                 deleted_badges.append({
                     "userId": user_id,
-                    "badgeInstanceId": badge_id,
-                    "badgeId": badge.get('badgeId'),
-                    "comment": badge.get('comment')
+                    "badgeId": badge_id,
+                    "badgeInstanceId": badge_instance_id
                 })
 
-        if deleted_badges:
-            flash(f"Deleted {len(deleted_badges)} badges for user {user_id}.", "success")
-        else:
-            flash("No badges were deleted.", "error")
-    else:
-        flash("Failed to retrieve user badges from SuccessFactors.", "error")
+        flash(f"Success! {deleted_count} badges deleted for user {user_id}.", "success")
+        return redirect(url_for('index'))
 
-    return render_template('index.html', deleted_badges=deleted_badges)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    except Exception as e:
+        flash(f"Error deleting badges: {str(e)}", "error")
+        return redirect(url_for('index'))
 
