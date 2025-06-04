@@ -1,100 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>SuccessFactors Badge Uploader</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      justify-content: center;
-      align-items: center;
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background-color: #f9f9f9;
     }
-    .container {
-      background: white;
-      padding: 2rem 3rem;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 350px;
-      text-align: center;
-    }
+
     h1 {
-      margin-bottom: 1.5rem;
       color: #333;
     }
-    input[type="file"] {
+
+    .success {
+      color: green;
       margin-bottom: 1rem;
-      padding: 6px;
-      width: 100%;
+      font-weight: bold;
     }
+
+    .error {
+      color: red;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+
+    form {
+      margin-bottom: 2rem;
+    }
+
+    input[type="file"] {
+      padding: 0.5rem;
+    }
+
     button {
-      background-color: #0078d7;
+      padding: 0.5rem 1rem;
+      background-color: #1976d2;
       color: white;
       border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
-      width: 100%;
     }
+
     button:hover {
-      background-color: #005a9e;
+      background-color: #1565c0;
     }
-    .success, .error {
-      padding: 12px;
-      border-radius: 5px;
-      margin-bottom: 1rem;
-      font-weight: 600;
-      font-size: 0.95rem;
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 1rem;
+      background-color: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.75rem;
       text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
-    .success {
-      background-color: #e6ffed;
-      color: #2d7a3e;
-      border: 1px solid #2d7a3e;
-    }
-    .error {
-      background-color: #ffe6e6;
-      color: #a83a3a;
-      border: 1px solid #a83a3a;
-    }
-    .flash-icon {
-      font-weight: bold;
-      font-size: 1.2rem;
+
+    th {
+      background-color: #f1f1f1;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Upload Badge CSV</h1>
+  <h1>Upload Badge CSV</h1>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="{{ category }}">
-            <span class="flash-icon">
-              {% if category == 'success' %}✔️{% else %}❌{% endif %}
-            </span>
-            {{ message }}
-          </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv" required>
+    <button type="submit">Upload</button>
+  </form>
+
+  {% if uploaded_rows %}
+    <h2>Uploaded Badges</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Badge ID</th>
+          <th>Badge Instance ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in uploaded_rows %}
+        <tr>
+          <td>{{ row.userId }}</td>
+          <td>{{ row.badgeId }}</td>
+          <td>{{ row.badgeInstanceId }}</td>
+        </tr>
         {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="file" accept=".csv" required />
-      <button type="submit">Upload</button>
-    </form>
-  </div>
+      </tbody>
+    </table>
+  {% endif %}
 </body>
 </html>
 
