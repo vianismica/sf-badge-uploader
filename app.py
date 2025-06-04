@@ -20,16 +20,19 @@ def upload_badges():
     try:
         df = pd.read_csv(file)
 
-        if 'userId' not in df.columns or 'badgeId' not in df.columns or 'badgeInstanceId' not in df.columns:
-            flash("CSV must contain userId, badgeId, and badgeInstanceId columns.", "error")
+        # Check required columns
+        required_columns = {'userId', 'badgeId', 'badgeInstanceId', 'comment'}
+        if not required_columns.issubset(df.columns):
+            flash("CSV must contain userId, badgeId, badgeInstanceId, and comment columns.", "error")
             return redirect(url_for('index'))
 
         total_uploaded = 0
         for _, row in df.iterrows():
             payload = {
                 "userId": row['userId'],
-                "badgeId": row['badgeId'],
-                "badgeInstanceId": row['badgeInstanceId']
+                "badgeId": str(row['badgeId']),
+                "badgeInstanceId": str(row['badgeInstanceId']),
+                "comment": row['comment']
             }
 
             response = requests.post(
@@ -37,6 +40,10 @@ def upload_badges():
                 json=payload,
                 auth=(os.environ['SF_USERNAME'], os.environ['SF_PASSWORD'])
             )
+
+            print(f"Payload: {payload}")
+            print(f"Status Code: {response.status_code}")
+            print(f"Response Text: {response.text}")
 
             if response.status_code == 201:
                 total_uploaded += 1
@@ -47,3 +54,7 @@ def upload_badges():
     except Exception as e:
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
