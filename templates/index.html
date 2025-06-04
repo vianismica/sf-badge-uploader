@@ -1,68 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>SuccessFactors Badge Uploader</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
-      background-color: #f9f9f9;
-    }
-
-    h1 {
-      color: #333;
-    }
-
-    .success {
-      color: green;
-      margin-bottom: 1rem;
-      font-weight: bold;
-    }
-
-    .error {
-      color: red;
-      margin-bottom: 1rem;
-      font-weight: bold;
-    }
-
-    form {
-      margin-bottom: 2rem;
-    }
-
-    input[type="file"] {
-      padding: 0.5rem;
-    }
-
-    button {
-      padding: 0.5rem 1rem;
-      background-color: #1976d2;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #1565c0;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 1rem;
-      background-color: white;
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 0.75rem;
-      text-align: left;
-    }
-
-    th {
-      background-color: #f1f1f1;
-    }
+    body { font-family: Arial; margin: 2rem; }
+    .success { color: green; margin-bottom: 1rem; }
+    .error { color: red; margin-bottom: 1rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 2rem; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
   </style>
 </head>
 <body>
@@ -77,11 +24,11 @@
   {% endwith %}
 
   <form action="/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="file" accept=".csv" required>
+    <input type="file" name="file" accept=".csv" required />
     <button type="submit">Upload</button>
   </form>
 
-  {% if uploaded_rows %}
+  {% if badges %}
     <h2>Uploaded Badges</h2>
     <table>
       <thead>
@@ -89,14 +36,16 @@
           <th>User ID</th>
           <th>Badge ID</th>
           <th>Badge Instance ID</th>
+          <th>Comment</th>
         </tr>
       </thead>
       <tbody>
-        {% for row in uploaded_rows %}
+        {% for badge in badges %}
         <tr>
-          <td>{{ row.userId }}</td>
-          <td>{{ row.badgeId }}</td>
-          <td>{{ row.badgeInstanceId }}</td>
+          <td>{{ badge.userId }}</td>
+          <td>{{ badge.badgeId }}</td>
+          <td>{{ badge.badgeInstanceId }}</td>
+          <td>{{ badge.comment }}</td>
         </tr>
         {% endfor %}
       </tbody>

@@ -4,11 +4,14 @@ import requests
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Needed for flash messages
+app.secret_key = 'your_secret_key'
+
+# Store uploaded badges here (for demo, resets on restart)
+uploaded_badges = []
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', badges=uploaded_badges)
 
 @app.route('/upload', methods=['POST'])
 def upload_badges():
@@ -19,8 +22,6 @@ def upload_badges():
 
     try:
         df = pd.read_csv(file)
-
-        # Check required columns
         required_columns = {'userId', 'badgeId', 'badgeInstanceId', 'comment'}
         if not required_columns.issubset(df.columns):
             flash("CSV must contain userId, badgeId, badgeInstanceId, and comment columns.", "error")
@@ -41,12 +42,15 @@ def upload_badges():
                 auth=(os.environ['SF_USERNAME'], os.environ['SF_PASSWORD'])
             )
 
-            print(f"Payload: {payload}")
-            print(f"Status Code: {response.status_code}")
-            print(f"Response Text: {response.text}")
-
             if response.status_code == 201:
                 total_uploaded += 1
+                # Save badge info locally
+                uploaded_badges.append({
+                    "userId": row['userId'],
+                    "badgeId": row['badgeId'],
+                    "badgeInstanceId": row['badgeInstanceId'],
+                    "comment": row['comment']
+                })
 
         flash(f"Success! {total_uploaded} badges uploaded.", "success")
         return redirect(url_for('index'))
