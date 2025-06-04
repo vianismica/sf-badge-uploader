@@ -4,54 +4,17 @@
   <meta charset="UTF-8" />
   <title>SuccessFactors Badge Uploader</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 800px; }
-    h1, h2 { color: #333; }
+    body { font-family: Arial, sans-serif; margin: 2rem; }
     .success { color: green; margin-bottom: 1rem; }
     .error { color: red; margin-bottom: 1rem; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      margin-bottom: 2rem;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: left;
-    }
-    th {
-      background-color: #eee;
-    }
-    form {
-      margin-bottom: 1.5rem;
-    }
-    input[type="text"], input[type="file"] {
-      padding: 0.5rem;
-      font-size: 1rem;
-      margin-right: 0.5rem;
-    }
-    button {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      cursor: pointer;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 3px;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    label {
-      font-weight: bold;
-      margin-right: 0.5rem;
-    }
+    table { border-collapse: collapse; margin-top: 1rem; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+    form { margin-bottom: 2rem; }
   </style>
 </head>
 <body>
   <h1>SuccessFactors Badge Uploader</h1>
 
-  <!-- Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
@@ -60,35 +23,24 @@
     {% endif %}
   {% endwith %}
 
-  <!-- Upload CSV Form -->
-  <h2>Upload Badge CSV</h2>
+  <!-- Upload Form -->
   <form action="/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="file" accept=".csv" required />
+    <label><strong>Upload CSV of badges</strong></label><br>
+    <input type="file" name="file" accept=".csv" required>
     <button type="submit">Upload</button>
   </form>
 
-  <!-- Delete Badges Form -->
-  <h2>Delete Badges for a User</h2>
-  <form action="/delete-user-badges" method="post">
-    <label for="userId">User ID:</label>
-    <input type="text" id="userId" name="userId" placeholder="Enter User ID" required />
-    <button type="submit">Delete Badges</button>
-  </form>
-
-  <!-- Table of Uploaded Badges -->
-  <h2>Uploaded Badges</h2>
-  {% if badges %}
-  <table>
-    <thead>
+  <!-- Uploaded Badges Table -->
+  {% if uploaded_badges %}
+    <h2>Uploaded Badges</h2>
+    <table>
       <tr>
         <th>User ID</th>
         <th>Badge ID</th>
         <th>Badge Instance ID</th>
         <th>Comment</th>
       </tr>
-    </thead>
-    <tbody>
-      {% for badge in badges %}
+      {% for badge in uploaded_badges %}
       <tr>
         <td>{{ badge.userId }}</td>
         <td>{{ badge.badgeId }}</td>
@@ -96,10 +48,37 @@
         <td>{{ badge.comment }}</td>
       </tr>
       {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p>No badges uploaded yet.</p>
+    </table>
+  {% endif %}
+
+  <hr>
+
+  <!-- Delete Badges Form -->
+  <form action="/delete-user-badges" method="post">
+    <label><strong>Delete Badges for User</strong></label><br>
+    <input type="text" name="userId" placeholder="Enter userId" required>
+    <button type="submit">Delete Badges</button>
+  </form>
+
+  <!-- Deleted Badges Table -->
+  {% if deleted_badges %}
+    <h2>Deleted Badges</h2>
+    <table>
+      <tr>
+        <th>User ID</th>
+        <th>Badge ID</th>
+        <th>Badge Instance ID</th>
+        <th>Comment</th>
+      </tr>
+      {% for badge in deleted_badges %}
+      <tr>
+        <td>{{ badge.userId }}</td>
+        <td>{{ badge.badgeId }}</td>
+        <td>{{ badge.badgeInstanceId }}</td>
+        <td>{{ badge.comment }}</td>
+      </tr>
+      {% endfor %}
+    </table>
   {% endif %}
 </body>
 </html>
