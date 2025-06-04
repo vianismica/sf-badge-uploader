@@ -4,17 +4,54 @@
   <meta charset="UTF-8" />
   <title>SuccessFactors Badge Uploader</title>
   <style>
-    body { font-family: Arial; margin: 2rem; }
+    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 800px; }
+    h1, h2 { color: #333; }
     .success { color: green; margin-bottom: 1rem; }
     .error { color: red; margin-bottom: 1rem; }
-    table { border-collapse: collapse; width: 100%; margin-top: 2rem; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    th {
+      background-color: #eee;
+    }
+    form {
+      margin-bottom: 1.5rem;
+    }
+    input[type="text"], input[type="file"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-right: 0.5rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 3px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Upload Badge CSV</h1>
+  <h1>SuccessFactors Badge Uploader</h1>
 
+  <!-- Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
@@ -23,33 +60,46 @@
     {% endif %}
   {% endwith %}
 
+  <!-- Upload CSV Form -->
+  <h2>Upload Badge CSV</h2>
   <form action="/upload" method="post" enctype="multipart/form-data">
     <input type="file" name="file" accept=".csv" required />
     <button type="submit">Upload</button>
   </form>
 
+  <!-- Delete Badges Form -->
+  <h2>Delete Badges for a User</h2>
+  <form action="/delete-user-badges" method="post">
+    <label for="userId">User ID:</label>
+    <input type="text" id="userId" name="userId" placeholder="Enter User ID" required />
+    <button type="submit">Delete Badges</button>
+  </form>
+
+  <!-- Table of Uploaded Badges -->
+  <h2>Uploaded Badges</h2>
   {% if badges %}
-    <h2>Uploaded Badges</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>User ID</th>
-          <th>Badge ID</th>
-          <th>Badge Instance ID</th>
-          <th>Comment</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for badge in badges %}
-        <tr>
-          <td>{{ badge.userId }}</td>
-          <td>{{ badge.badgeId }}</td>
-          <td>{{ badge.badgeInstanceId }}</td>
-          <td>{{ badge.comment }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <table>
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>Badge ID</th>
+        <th>Badge Instance ID</th>
+        <th>Comment</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for badge in badges %}
+      <tr>
+        <td>{{ badge.userId }}</td>
+        <td>{{ badge.badgeId }}</td>
+        <td>{{ badge.badgeInstanceId }}</td>
+        <td>{{ badge.comment }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No badges uploaded yet.</p>
   {% endif %}
 </body>
 </html>
